@@ -1,0 +1,97 @@
+@font-face {
+  font-family: "Lora";
+  src: url("yazi/lora.ttf") format("truetype");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+:root {
+  --krem: #F7F1E3;
+  --krem-acik: #FCF8EE;
+  --yaprak: #2F6B3E;
+  --orman: #1F3D2A;
+  --cimen: #7BA884;
+  --toprak: #3B342C;
+  --kul: #6E655B;
+  --cizgi: #E2D8C5;
+  --damla: #6F9CC4;
+  --gok: #E8EFE6;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--krem);
+  color: var(--toprak);
+  font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+img { display: block; max-width: 100%; }
+a { color: var(--yaprak); text-underline-offset: 3px; }
+a:hover { color: var(--orman); }
+:focus-visible { outline: 3px solid var(--yaprak); outline-offset: 3px; border-radius: 6px; }
+
+h1, h2, h3 {
+  font-family: Lora, Georgia, serif;
+  font-weight: 500;
+  color: var(--orman);
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* Üst şerit */
+.ust {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.marka {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: Lora, Georgia, serif;
+  font-size: 1.35rem;
+  color: var(--orman);
+  text-decoration: none;
+}
+.marka svg { width: 28px; height: 28px; fill: var(--yaprak); }
+.ust nav { display: flex; gap: 20px; font-size: 0.95rem; }
+.ust nav a { color: var(--kul); text-decoration: none; }
+.ust nav a:hover { color: var(--orman); text-decoration: underline; }
+
+/* Yazı sayfaları (gizlilik, veri) */
+.metin {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 24px 16px 72px;
+}
+.metin h1 { font-size: clamp(2rem, 5vw, 2.6rem); margin-bottom: 8px; }
+.metin h2 { font-size: 1.3rem; margin: 40px 0 8px; }
+.metin .tarih { color: var(--kul); font-size: 0.95rem; margin: 0 0 28px; }
+.metin ul { padding-inline-start: 22px; }
+.metin li { margin: 6px 0; }
+.ozet {
+  background: var(--krem-acik);
+  border-inline-start: 4px solid var(--cimen);
+  border-radius: 4px 16px 16px 4px;
+  padding: 16px 20px;
+  font-size: 1.05rem;
+}
+.ozet p { margin: 0; }
+
+.alt {
+  border-top: 1px solid var(--cizgi);
+  color: var(--kul);
+  font-size: 0.9rem;
+}
+.alt div {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+.alt p { margin: 4px 0; }
+.alt a { color: var(--kul); }

@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Namazım – Mevsimler Değişir</title>
+  <meta name="description" content="Ana ekranında küçük bir fidan. Vakit ilerledikçe havası değişir, tek dokunuşla “kıldım” dersin. Reklamsız, hesapsız, internetsiz.">
+  <link rel="icon" href="gorseller/sahne_s_il_01_5.webp">
+  <link rel="stylesheet" href="stil.css">
+  <style>
+    /* Giriş: gökyüzü, widget'ın aşamasına göre değişir */
+    @property --gok-renk { syntax: "<color>"; inherits: false; initial-value: #E6EFE7; }
+    .gok {
+      --gok-renk: #E6EFE7;
+      background: linear-gradient(to bottom, var(--gok-renk) 0%, var(--krem) 92%);
+      transition: --gok-renk 1.4s ease;
+    }
+    .gok[data-asama="2"] { --gok-renk: #E4ECEB; }
+    .gok[data-asama="3"] { --gok-renk: #D5D9E1; }
+    .gok[data-asama="4"] { --gok-renk: #C3C8D6; }
+    .gok[data-asama="5"] { --gok-renk: #F3F6EA; }
+
+    .giris {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 16px 88px;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 56px;
+      align-items: center;
+    }
+    .giris h1 {
+      font-size: clamp(2.6rem, 6.4vw, 4.6rem);
+      line-height: 1.04;
+      letter-spacing: -0.015em;
+    }
+    .giris h1 span { display: block; }
+    .giris .acilis {
+      font-size: 1.15rem;
+      max-width: 34ch;
+      margin: 24px 0 28px;
+    }
+    .yakinda {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--orman);
+      color: var(--krem);
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 0.98rem;
+    }
+    .yakinda svg { width: 18px; height: 18px; fill: var(--cimen); }
+
+    /* Canlı widget */
+    .sahne-kutu { justify-self: center; text-align: center; }
+    .widget {
+      position: relative;
+      width: min(340px, 78vw);
+      aspect-ratio: 1;
+      border: 0;
+      padding: 0;
+      border-radius: 28px;
+      overflow: hidden;
+      cursor: pointer;
+      background: #ddd;
+      box-shadow: 0 24px 48px -24px rgba(31, 61, 42, 0.45);
+      transition: transform 0.15s ease;
+    }
+    .widget:active { transform: scale(0.97); }
+    .widget img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1.1s ease;
+    }
+    .widget img.gorunur { opacity: 1; }
+    .widget .yazi {
+      position: absolute;
+      inset-inline-start: 18px;
+      inset-block-end: 14px;
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,.7), 0 0 10px rgba(0,0,0,.45);
+      white-space: nowrap;
+    }
+    .widget .yazi.orta { inset-inline: 0; text-align: center; }
+    .widget .rozet {
+      position: absolute;
+      inset-inline-end: 12px;
+      inset-block-start: 12px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-shadow: 0 1px 2px rgba(0,0,0,.7);
+    }
+    .widget .rozet svg { width: 18px; height: 18px; fill: #fff; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+    .ipucu {
+      color: var(--kul);
+      font-size: 0.95rem;
+      margin: 18px auto 0;
+      min-height: 1.6em;
+    }
+    .cizelge {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .cizelge i {
+      width: 34px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--cizgi);
+      transition: background-color 0.6s ease;
+    }
+    .cizelge i.dolu { background: var(--cimen); }
+
+    /* Bölümler */
+    .bolum {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 88px 16px 0;
+    }
+    .bolum > h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); max-width: 22ch; }
+    .bolum > p { max-width: 58ch; font-size: 1.08rem; margin: 16px 0 0; }
+
+    /* Bir vaktin seyri */
+    .seyir {
+      list-style: none;
+      padding: 0;
+      margin: 40px 0 0;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+    .seyir img { border-radius: 18px; width: 100%; aspect-ratio: 1; object-fit: cover; }
+    .seyir li:last-child img { box-shadow: 0 0 0 3px var(--cimen); }
+    .seyir b { display: block; font-family: Lora, Georgia, serif; font-weight: 500; color: var(--orman); margin-top: 10px; font-size: 1.05rem; }
+    .seyir span { display: block; color: var(--kul); font-size: 0.92rem; line-height: 1.45; }
+
+    /* Mevsimler */
+    .mevsimler {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .mevsim {
+      position: relative;
+      border: 0;
+      padding: 0;
+      background: none;
+      text-align: start;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+    }
+    .mevsim, .mevsim .resim, .mevsim b, .mevsim span { display: block; }
+    .mevsimler { align-items: start; }
+    .mevsim .resim { position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 1; }
+    .mevsim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.9s ease; }
+    .mevsim img + img { opacity: 0; }
+    .mevsim[aria-pressed="true"] img + img { opacity: 1; }
+    .mevsim b { display: block; font-family: Lora, Georgia, serif; font-weight: 500; color: var(--orman); margin-top: 10px; font-size: 1.15rem; }
+    .mevsim > span:last-child { color: var(--kul); font-size: 0.92rem; }
+    .not { color: var(--kul); font-size: 0.95rem; margin-top: 18px; }
+
+    /* Widget'lar */
+    .widgetlar {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 2fr;
+      grid-template-areas: "sahne seri genis" "birlesik birlesik aciklama";
+      gap: 28px 20px;
+      align-items: start;
+    }
+    .widgetlar figure { margin: 0; }
+    .widgetlar figcaption { margin-top: 10px; font-size: 0.95rem; color: var(--kul); }
+    .widgetlar figcaption b { display: block; color: var(--toprak); font-weight: 600; }
+    .w-sahne { grid-area: sahne; }
+    .w-seri { grid-area: seri; }
+    .w-genis { grid-area: genis; }
+    .w-birlesik { grid-area: birlesik; }
+    .ikili { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ikili img { border-radius: 18px; aspect-ratio: 1; object-fit: cover; width: 100%; }
+    .seri-kart.kucuk { border-radius: 18px; gap: 8px; }
+    .seri-kart.kucuk .sayi { font-size: clamp(1.4rem, 3vw, 1.9rem); }
+    .seri-kart.kucuk .noktalar { gap: 5px; }
+    .seri-kart.kucuk .noktalar i { width: 8px; height: 8px; }
+    .seri-kart.kucuk .noktalar i.simdi { width: 11px; height: 11px; }
+    .w-sahne img { border-radius: 22px; aspect-ratio: 1; object-fit: cover; width: 100%; }
+    .w-genis img { border-radius: 22px; width: 100%; }
+    .seri-kart {
+      aspect-ratio: 1;
+      border-radius: 22px;
+      background: var(--krem-acik);
+      border: 1px solid var(--cizgi);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .seri-kart .sayi { display: flex; align-items: center; gap: 4px; font-size: clamp(2.2rem, 5vw, 3rem); font-weight: 700; color: var(--toprak); line-height: 1; }
+    .seri-kart .sayi svg { width: 0.9em; height: 0.9em; fill: var(--yaprak); }
+    .noktalar { display: flex; gap: 7px; align-items: center; }
+    .noktalar i { width: 12px; height: 12px; border-radius: 50%; background: var(--yaprak); }
+    .noktalar i.bos { background: none; box-shadow: inset 0 0 0 2px #8A7F72; }
+    .w-aciklama { grid-area: aciklama; align-self: center; max-width: 52ch; font-size: 1.05rem; }
+    .w-aciklama p { margin: 0 0 12px; }
+
+    /* Yoklar */
+    .yoklar {
+      margin: 40px 0 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 36px 40px;
+    }
+    .yoklar div { border-top: 2px solid var(--cimen); padding-top: 14px; }
+    .yoklar dt { font-family: Lora, Georgia, serif; font-size: 1.3rem; color: var(--orman); }
+    .yoklar dd { margin: 6px 0 0; color: var(--kul); font-size: 0.98rem; }
+
+    /* Kapanış */
+    .kapanis {
+      max-width: 1080px;
+      margin: 104px auto 0;
+      padding: 0 16px 96px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .kapanis img { width: 200px; border-radius: 26px; }
+    .kapanis h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
+    .kapanis p { margin: 14px 0 22px; max-width: 46ch; font-size: 1.05rem; }
+
+    @media (max-width: 900px) {
+      .giris { grid-template-columns: 1fr; gap: 40px; padding-top: 16px; }
+      .seyir { grid-template-columns: repeat(5, minmax(140px, 1fr)); overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
+      .seyir li { scroll-snap-align: start; }
+      .mevsimler { grid-template-columns: repeat(2, 1fr); }
+      .widgetlar { grid-template-columns: 1fr 1fr; grid-template-areas: "sahne seri" "genis genis" "birlesik aciklama"; }
+      .w-aciklama { font-size: 0.98rem; }
+      .yoklar { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) {
+      .ust nav a.ikincil { display: none; }
+      .widgetlar { grid-template-areas: "sahne seri" "genis genis" "birlesik birlesik" "aciklama aciklama"; }
+      .yoklar { grid-template-columns: 1fr; gap: 24px; }
+      .kapanis { grid-template-columns: 1fr; }
+      .kapanis img { width: 140px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .widget img, .mevsim img, .cizelge i, .gok { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="fidan" viewBox="0 0 24 24"><path d="M11.25,21L11.25,12.6C9.2,12.6 5,11.4 4.5,5.5C9.6,5.6 11.6,8.5 12,11.2C12.5,7.6 15,4.6 19.8,4.5C19.6,10.4 15.4,12.4 12.75,12.6L12.75,21Z"/></symbol>
+</svg>
+
+<div class="gok" id="gok" data-asama="1">
+  <header class="ust">
+    <a class="marka" href="./"><svg aria-hidden="true"><use href="#fidan"/></svg>Namazım</a>
+    <nav aria-label="Sayfalar">
+      <a class="ikincil" href="#widgetlar">Widget'lar</a>
+      <a href="gizlilik.html">Gizlilik</a>
+    </nav>
+  </header>
+
+  <section class="giris">
+    <div>
+      <h1><span>Mevsimler değişir,</span><span>namaz kalır.</span></h1>
+      <p class="acilis">Ana ekranında küçük bir fidan. Vakit ilerledikçe havası değişir. Kıldığında tek dokunuşla söylersin; fidan sulanır, gökyüzü açar.</p>
+      <span class="yakinda"><svg aria-hidden="true"><use href="#fidan"/></svg>Yakında Google Play'de</span>
+    </div>
+
+    <div class="sahne-kutu">
+      <button class="widget" id="widget" type="button" aria-describedby="ipucu">
+        <span class="katmanlar" id="katmanlar"></span>
+        <span class="rozet" id="rozet"><svg aria-hidden="true"><use href="#fidan"/></svg><span id="seri">12</span></span>
+        <span class="yazi" id="yazi">Akşam</span>
+      </button>
+      <div class="cizelge" id="cizelge" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      <p class="ipucu" id="ipucu" aria-live="polite">Fidana dokun, “kıldım” de.</p>
+    </div>
+  </section>
+</div>
+
+<section class="bolum">
+  <h2>Bir vakit, beş görünüm</h2>
+  <p>Widget her vaktin seyrini resimle anlatır. Yazı yalnızca vaktin adını ve son dakikalarda kalan süreyi gösterir; ne uyarı vardır ne bildirim.</p>
+  <ol class="seyir">
+    <li><img src="gorseller/sahne_s_il_01_1.webp" alt="Bahar sahnesi, açık gökyüzü altında dimdik yeşil fidan" loading="lazy"><b>Vakit girer</b><span>Gökyüzü açık, fidan dimdik.</span></li>
+    <li><img src="gorseller/sahne_s_il_01_2.webp" alt="Aynı sahne, bulutlanan gökyüzü" loading="lazy"><b>Vaktin yarısı</b><span>Bulutlar toplanmaya başlar.</span></li>
+    <li><img src="gorseller/sahne_s_il_01_3.webp" alt="Aynı sahne, yağmur başlamış" loading="lazy"><b>Dörtte üçü</b><span>Yağmur başlar, yapraklar eğilir.</span></li>
+    <li><img src="gorseller/sahne_s_il_01_4.webp" alt="Aynı sahne, sağanak altında boynu bükük fidan" loading="lazy"><b>Son dakikalar</b><span>Sağanak bastırır. Fidan solsa da hep yeşil kalır.</span></li>
+    <li><img src="gorseller/sahne_s_il_01_5.webp" alt="Aynı sahne, ışıl ışıl gökyüzü ve sulanmış fidan" loading="lazy"><b>Kıldın</b><span>Gökyüzü açar. Bir sonraki vakte kadar böyle kalır.</span></li>
+  </ol>
+</section>
+
+<section class="bolum">
+  <h2>Dört mevsim, on beş sahne</h2>
+  <p>Her vakit rastgele bir sahneyle gelir. Aynı sahne on vakit boyunca tekrar etmez, art arda iki vakit aynı mevsimden olmaz. Bir sahneye dokun, o mevsimin nasıl bozduğunu gör.</p>
+  <div class="mevsimler">
+    <button class="mevsim" type="button" aria-pressed="false">
+      <span class="resim"><img src="gorseller/sahne_s_il_03_1.webp" alt="İlkbahar sahnesi" loading="lazy"><img src="gorseller/sahne_s_il_03_4.webp" alt="" loading="lazy"></span>
+      <b>İlkbahar</b><span>Yağmur ve sağanak</span>
+    </button>
+    <button class="mevsim" type="button" aria-pressed="false">
+      <span class="resim"><img src="gorseller/sahne_s_yz_02_1.webp" alt="Yaz sahnesi" loading="lazy"><img src="gorseller/sahne_s_yz_02_4.webp" alt="" loading="lazy"></span>
+      <b>Yaz</b><span>Kavurucu güneş ve kuraklık</span>
+    </button>
+    <button class="mevsim" type="button" aria-pressed="false">
+      <span class="resim"><img src="gorseller/sahne_s_sb_04_1.webp" alt="Sonbahar sahnesi" loading="lazy"><img src="gorseller/sahne_s_sb_04_4.webp" alt="" loading="lazy"></span>
+      <b>Sonbahar</b><span>Rüzgâr, sis ve savrulan yapraklar</span>
+    </button>
+    <button class="mevsim" type="button" aria-pressed="false">
+      <span class="resim"><img src="gorseller/sahne_s_ks_02_1.webp" alt="Kış sahnesi" loading="lazy"><img src="gorseller/sahne_s_ks_02_4.webp" alt="" loading="lazy"></span>
+      <b>Kış</b><span>Kar ve tipi</span>
+    </button>
+  </div>
+  <p class="not">Mevsimler takvime bağlı değildir; temmuzda kar da yağabilir.</p>
+</section>
+
+<section class="bolum" id="widgetlar">
+  <h2>Dört widget, istediğin boyutta</h2>
+  <div class="widgetlar">
+    <figure class="w-sahne">
+      <img src="gorseller/sahne_s_ks_01_1.webp" alt="Sahne widget'ı: karlı bir sahnede yeşil fidan" loading="lazy">
+      <figcaption><b>Namazım</b>Sahne ve tek dokunuşla “kıldım”.</figcaption>
+    </figure>
+    <figure class="w-seri">
+      <div class="seri-kart" role="img" aria-label="Seri widget'ı: 12 gün, bugün üç vakit kılındı">
+        <span class="sayi"><svg aria-hidden="true"><use href="#fidan"/></svg>12</span>
+        <span class="noktalar"><i></i><i></i><i></i><i class="bos"></i><i class="bos"></i></span>
+      </div>
+      <figcaption><b>Namazım – Seri</b>Kaç gündür sürdüğü ve bugünün beş vakti.</figcaption>
+    </figure>
+    <figure class="w-genis">
+      <img src="gorseller/widget_genis_onizleme.webp" alt="Geniş widget: solda sahne, sağda seri" loading="lazy">
+      <figcaption><b>Namazım – Geniş</b>Sahne ve seri yan yana.</figcaption>
+    </figure>
+    <figure class="w-birlesik">
+      <div class="ikili">
+        <img src="gorseller/sahne_s_yz_01_3.webp" alt="Kılınmadan önce: sahne" loading="lazy">
+        <div class="seri-kart kucuk" role="img" aria-label="Kılındıktan sonra: seri, 13 gün">
+          <span class="sayi"><svg aria-hidden="true"><use href="#fidan"/></svg>13</span>
+          <span class="noktalar"><i></i><i></i><i class="simdi"></i><i class="bos"></i><i class="bos"></i></span>
+        </div>
+      </div>
+      <figcaption><b>Namazım – Sahne ve Seri</b>Kılana kadar sahne, kılınca seri.</figcaption>
+    </figure>
+    <div class="w-aciklama">
+      <p>Seri gün gün sayılır. Kaç vakitle devam edeceğine sen karar verirsin; yetişemediğin bir günde sayaç sessizce baştan başlar, ne mesaj çıkar ne kırmızı.</p>
+      <p>Uygulamada bugünün vakitlerini, geçmiş günleri ve kaza olarak işaretlediğin vakitleri görürsün.</p>
+    </div>
+  </div>
+</section>
+
+<section class="bolum">
+  <h2>Olmayanlar da bir o kadar önemli</h2>
+  <dl class="yoklar">
+    <div><dt>Suçluluk yok</dt><dd>Kılınmayan vaktin izi bir sonrakine taşınmaz. Her vakit yeni bir davet. Fidan hiç ölmez.</dd></div>
+    <div><dt>Reklam yok</dt><dd>Ne şimdi ne sonra. Uygulamada kırmızı renk bile yok.</dd></div>
+    <div><dt>Bildirim yok</dt><dd>Hatırlatıcı, ana ekranındaki widget'ın kendisi.</dd></div>
+    <div><dt>Hesap yok</dt><dd>Kayıt olmazsın, giriş yapmazsın. Kayıtların telefonunda kalır.</dd></div>
+    <div><dt>İnternet yok</dt><dd>Vakitler telefonda, Diyanet yöntemiyle hesaplanır. Uygulamanın internet izni yok.</dd></div>
+    <div><dt>Sınıflandırma yok</dt><dd>Puan, rozet, seviye yok. Yalnızca sen ve vakitler.</dd></div>
+  </dl>
+</section>
+
+<section class="kapanis">
+  <img src="gorseller/sahne_s_ks_01_5.webp" alt="Kış sahnesinde sulanmış, ışıl ışıl fidan" loading="lazy">
+  <div>
+    <h2>Senin verin, senin telefonunda.</h2>
+    <p>Namazım hiçbir veri toplamaz. Neyin nerede tutulduğunu ve nasıl silineceğini gizlilik politikasında açıkça yazdık.</p>
+    <a href="gizlilik.html">Gizlilik politikası</a> &nbsp; <a href="privacy.html" lang="en">Privacy policy</a>
+  </div>
+</section>
+
+<footer class="alt">
+  <div>
+    <p>Namazım, Diyanet İşleri Başkanlığı ile bağlantılı değildir.</p>
+    <p>İl ve ilçe konumları: © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap katkıcıları</a> (ODbL). <a href="veri/">İlçe listesini indir</a>.</p>
+    <p>Başlık yazı tipi: Lora (<a href="yazi/OFL.txt">SIL Open Font License</a>).</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var sahneler = [
+    { id: "sb_02", vakit: "Akşam" },
+    { id: "ks_01", vakit: "Yatsı" },
+    { id: "il_01", vakit: "Sabah" },
+    { id: "yz_01", vakit: "Öğle" }
+  ];
+  var kalan = { 3: "22 dk", 4: "6 dk" };
+  var widget = document.getElementById("widget");
+  var katmanlar = document.getElementById("katmanlar");
+  var yazi = document.getElementById("yazi");
+  var ipucu = document.getElementById("ipucu");
+  var seriEl = document.getElementById("seri");
+  var gok = document.getElementById("gok");
+  var cizgiler = document.querySelectorAll("#cizelge i");
+  var seri = 12, sira = 0, asama = 1, zamanlayici = null;
+
+  function resimler(s) {
+    katmanlar.innerHTML = "";
+    for (var i = 1; i <= 5; i++) {
+      var img = document.createElement("img");
+      img.src = "gorseller/sahne_s_" + s.id + "_" + i + ".webp";
+      img.alt = "";
+      if (i === asama) img.className = "gorunur";
+      katmanlar.appendChild(img);
+    }
+  }
+
+  function goster() {
+    var s = sahneler[sira];
+    var imgs = katmanlar.querySelectorAll("img");
+    for (var i = 0; i < imgs.length; i++) imgs[i].classList.toggle("gorunur", i === asama - 1);
+    for (var j = 0; j < cizgiler.length; j++) cizgiler[j].classList.toggle("dolu", j < asama);
+    gok.setAttribute("data-asama", asama);
+    if (asama === 5) {
+      yazi.textContent = "Allah kabul etsin";
+      yazi.classList.add("orta");
+      widget.setAttribute("aria-label", s.vakit + " vakti kılındı. Allah kabul etsin.");
+    } else {
+      yazi.textContent = kalan[asama] ? s.vakit + " · " + kalan[asama] : s.vakit;
+      yazi.classList.remove("orta");
+      widget.setAttribute("aria-label", s.vakit + " vakti" + (kalan[asama] ? ", " + kalan[asama].replace("dk", "dakika") + " kaldı" : "") + ". Kıldım demek için dokunun.");
+    }
+    seriEl.textContent = seri;
+  }
+
+  function ilerle() {
+    clearTimeout(zamanlayici);
+    if (asama < 4) {
+      zamanlayici = setTimeout(function () { asama++; goster(); ilerle(); }, 2600);
+    }
+  }
+
+  function yeniVakit() {
+    sira = (sira + 1) % sahneler.length;
+    asama = 1;
+    resimler(sahneler[sira]);
+    ipucu.textContent = "Yeni vakit, yeni sahne. Fidana dokun.";
+    requestAnimationFrame(function () { goster(); ilerle(); });
+  }
+
+  widget.addEventListener("click", function () {
+    if (asama === 5) return;
+    clearTimeout(zamanlayici);
+    asama = 5;
+    seri++;
+    if (navigator.vibrate) navigator.vibrate(25);
+    goster();
+    ipucu.textContent = "Fidan sulandı. Bir sonraki vakte kadar böyle kalır.";
+    zamanlayici = setTimeout(yeniVakit, 5000);
+  });
+
+  var mevsimler = document.querySelectorAll(".mevsim");
+  for (var k = 0; k < mevsimler.length; k++) {
+    mevsimler[k].addEventListener("click", function () {
+      this.setAttribute("aria-pressed", this.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    });
+  }
+
+  resimler(sahneler[0]);
+  requestAnimationFrame(function () { goster(); ilerle(); });
+})();
+</script>
+</body>
+</html>
